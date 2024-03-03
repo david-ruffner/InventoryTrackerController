@@ -10,5 +10,12 @@ import java.util.List;
 
 @Repository
 public interface UserRepository extends CrudRepository<User, String> {
-
+    @Query(
+            value = """
+                select count(u.firstName)
+                from User u
+                where u.firstName = :firstName
+            """
+    )
+    public int getFirstNameCount(String firstName);
 }
