@@ -1,0 +1,29 @@
+database:
+  # Note: This is only a local connection for development
+  host: localhost
+  port: 3306
+  username: root
+  password: password
+  dbName: InventoryController
+
+encrypt:
+  keyLength: 256
+  iterationCount: 65536
+  secretKeyFactory: PBKDF2WithHmacSHA256
+  cipherInstance: AES/CBC/PKCS5Padding
+  # secretKey:
+  # salt:
+  encryptionMethod: AES
+
+spring:
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      ddl-auto: update
+    #show-sql: true
+  datasource:
+    url: jdbc:mysql://${database.host}:${database.port}/${database.dbName}
+    username: ${database.username}
+    password: ${database.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
