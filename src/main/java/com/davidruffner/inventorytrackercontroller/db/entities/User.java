@@ -41,6 +41,26 @@ public class User {
     )
     private List<Device> authorizedDevices = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<ScannableItem> scannableItems;
+
+    public List<ScannableItem> getScannableItems() {
+        return scannableItems;
+    }
+
+    public User setScannableItems(List<ScannableItem> scannableItems) {
+        this.scannableItems = scannableItems;
+        return this;
+    }
+
+    public void addScannableItem(ScannableItem item) {
+        this.scannableItems.add(item);
+    }
+
+    public void removeScannableItem(ScannableItem item) {
+        this.scannableItems.remove(item);
+    }
+
     public User() {}
 
     public User(String userId, String secret, String firstName, String lastName) {
