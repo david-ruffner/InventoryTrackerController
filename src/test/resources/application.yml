@@ -18,3 +18,12 @@ logging:
     org:
       hibernate:
         sql: info
+
+encrypt:
+  keyLength: 256
+  iterationCount: 65536
+  secretKeyFactory: PBKDF2WithHmacSHA256
+  cipherInstance: AES/CBC/PKCS5Padding
+  # secretKey:
+  # salt:
+  encryptionMethod: AES

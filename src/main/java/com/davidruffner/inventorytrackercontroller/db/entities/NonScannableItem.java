@@ -28,6 +28,51 @@ public class NonScannableItem {
     @Column(name = "Cost")
     private Float cost;
 
+    public User getUser() {
+        return user;
+    }
+
+    public NonScannableItem setUser(User user) {
+        this.user = user;
+        return this;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public NonScannableItem setItemName(String itemName) {
+        this.itemName = itemName;
+        return this;
+    }
+
+    public Integer getCurrentCount() {
+        return currentCount;
+    }
+
+    public NonScannableItem setCurrentCount(Integer currentCount) {
+        this.currentCount = currentCount;
+        return this;
+    }
+
+    public Integer getThreshold() {
+        return threshold;
+    }
+
+    public NonScannableItem setThreshold(Integer threshold) {
+        this.threshold = threshold;
+        return this;
+    }
+
+    public Float getCost() {
+        return cost;
+    }
+
+    public NonScannableItem setCost(Float cost) {
+        this.cost = cost;
+        return this;
+    }
+
     public NonScannableItem() {}
 
     public NonScannableItem(Builder builder) {

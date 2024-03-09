@@ -34,6 +34,69 @@ public class ScannableItem {
     @Column(name = "Cost")
     private Float cost;
 
+    public User getUser() {
+        return user;
+    }
+
+    public ScannableItem setUser(User user) {
+        this.user = user;
+        return this;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public ScannableItem setItemName(String itemName) {
+        this.itemName = itemName;
+        return this;
+    }
+
+    public String getMainBarcode() {
+        return mainBarcode;
+    }
+
+    public ScannableItem setMainBarcode(String mainBarcode) {
+        this.mainBarcode = mainBarcode;
+        return this;
+    }
+
+    public String getAltBarcode() {
+        return altBarcode;
+    }
+
+    public ScannableItem setAltBarcode(String altBarcode) {
+        this.altBarcode = altBarcode;
+        return this;
+    }
+
+    public Integer getCurrentCount() {
+        return currentCount;
+    }
+
+    public ScannableItem setCurrentCount(Integer currentCount) {
+        this.currentCount = currentCount;
+        return this;
+    }
+
+    public Integer getThreshold() {
+        return threshold;
+    }
+
+    public ScannableItem setThreshold(Integer threshold) {
+        this.threshold = threshold;
+        return this;
+    }
+
+    public Float getCost() {
+        return cost;
+    }
+
+    public ScannableItem setCost(Float cost) {
+        this.cost = cost;
+        return this;
+    }
+
     public ScannableItem() {}
 
     public ScannableItem(Builder builder) {
