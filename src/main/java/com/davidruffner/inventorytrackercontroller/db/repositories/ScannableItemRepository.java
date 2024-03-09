@@ -4,11 +4,20 @@ import com.davidruffner.inventorytrackercontroller.db.entities.ScannableItem;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
+
 public interface ScannableItemRepository  extends CrudRepository<ScannableItem, String> {
     @Query(value = """
-            select ScannableItem 
+            select si
             from ScannableItem si
             where si.mainBarcode = :mainBarcode
         """)
-    public ScannableItem getScannableItemByMainBarcode(String mainBarcode);
+    Optional<ScannableItem> getScannableItemByMainBarcode(String mainBarcode);
+
+    @Query(value = """
+            select si
+            from ScannableItem si
+            where si.altBarcode = :altBarcode
+        """)
+    Optional<ScannableItem> getScannableItemByAltBarcode(String altBarcode);
 }

@@ -12,8 +12,8 @@ public class ScannableItem {
     @Column(name = "Item_ID")
     private String itemId;
 
-    @ManyToOne
-    @JoinColumn(name = "User_ID", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "userId")
     private User user;
 
     @Column(name = "Item_Name", nullable = false)
@@ -33,6 +33,10 @@ public class ScannableItem {
 
     @Column(name = "Cost")
     private Float cost;
+
+    public String getItemId() {
+        return itemId;
+    }
 
     public User getUser() {
         return user;
@@ -79,6 +83,14 @@ public class ScannableItem {
         return this;
     }
 
+    public void incrementCurrentCount() {
+        this.currentCount = this.currentCount + 1;
+    }
+
+    public void decrementCurrentCount() {
+        this.currentCount = this.currentCount - 1;
+    }
+
     public Integer getThreshold() {
         return threshold;
     }
@@ -105,6 +117,7 @@ public class ScannableItem {
         this.itemName = builder.itemName;
         this.mainBarcode = builder.mainBarcode;
         this.currentCount = builder.currentCount;
+        this.threshold = builder.threshold;
         builder.altBarcode.ifPresent(s -> this.altBarcode = s);
         builder.cost.ifPresent(cost -> this.cost = cost);
     }

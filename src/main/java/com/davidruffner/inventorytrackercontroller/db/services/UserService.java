@@ -1,6 +1,8 @@
 package com.davidruffner.inventorytrackercontroller.db.services;
 
+import com.davidruffner.inventorytrackercontroller.db.entities.ScannableItem;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
+import com.davidruffner.inventorytrackercontroller.db.repositories.ScannableItemRepository;
 import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepository;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,9 @@ import java.util.Optional;
 public class UserService {
     @Autowired
     UserRepository userRepo;
+
+    @Autowired
+    ScannableItemRepository scannableItemRepo;
 
     public Optional<User> getUser(String username, String password) {
         Optional<User> user = userRepo.findById(username);

@@ -7,6 +7,7 @@ import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepositor
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("local")
 public class UserDBTest {
     @Autowired
     UserRepository userRepository;
@@ -22,7 +24,7 @@ public class UserDBTest {
     @BeforeEach
     public void setUp() {
         User user = new User("test@test.com", "secret",
-                "David", "Ruffner");
+                "David", "Ruffner", true);
         user.addAuthorizedDevice(new Device("fuf832fu2", "Kitchen Scanner"));
         user.addAuthorizedDevice(new Device("f2fj822f", "Bathroom Scanner"));
         userRepository.save(user);
@@ -38,6 +40,7 @@ public class UserDBTest {
         User user = userRepository.findById("test@test.com").orElseThrow();
         assertEquals("David", user.getFirstName());
         assertEquals("Ruffner", user.getLastName());
+        assertTrue(user.isAdmin());
         assertFalse(user.getAuthorizedDevices().isEmpty());
     }
 }
