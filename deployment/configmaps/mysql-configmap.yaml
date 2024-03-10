@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config-map
+data:
+  mysql-server: "inventory-tracker-controller-mysql"
+  mysql-database-name: "InventoryController"
+  mysql-user-username: "InventoryControllerUser"

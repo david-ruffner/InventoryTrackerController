@@ -2,8 +2,8 @@ database:
   # Note: This is only a local connection for development
   host: localhost
   port: 3306
-  username: root
-  password: password
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
   dbName: InventoryController
 
 encrypt:
@@ -11,8 +11,8 @@ encrypt:
   iterationCount: 65536
   secretKeyFactory: PBKDF2WithHmacSHA256
   cipherInstance: AES/CBC/PKCS5Padding
-  # secretKey:
-  # salt:
+#  secretKey:
+#  salt:
   encryptionMethod: AES
 
 spring:
