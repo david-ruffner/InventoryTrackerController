@@ -13,14 +13,17 @@ public class Logging {
     }
 
     public void error(String errMsg) {
-        this.LOGGER.error(String.format("ERROR | Class: %s | Error Message: %s",
-                this.className, errMsg));
+        this.LOGGER.error(errMsg);
     }
 
     public void error(String userId, String errMsg) {
         this.LOGGER.error(String.format("ERROR | Class: %s | User ID: %s |" +
                 " Error Message: %s", this.className, userId, errMsg));
     }
+
+//    public void authError(String errMsg) {
+//        this.LOGGER.error(errMsg);
+//    }
 
     public void info(String infoMsg) {
         this.LOGGER.info(String.format("INFO | Class: %s | Message: %s",

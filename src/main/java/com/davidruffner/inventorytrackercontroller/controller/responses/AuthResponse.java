@@ -3,65 +3,120 @@ package com.davidruffner.inventorytrackercontroller.controller.responses;
 import com.auth0.jwt.JWT;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
+import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
+import com.davidruffner.inventorytrackercontroller.util.Constants;
 import com.davidruffner.inventorytrackercontroller.util.Encryption;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import javax.management.ObjectName;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.Optional;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.SUCCESS;
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.*;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.AUTH_RESPONSE_BUILDER_BEAN;
+import static org.springframework.http.HttpStatus.*;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = AuthResponse.AuthResponseJsonFilter.class)
 public class AuthResponse {
+    public static class AuthResponseJsonFilter {
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Optional<?>) {
+                return ((Optional<?>) obj).isEmpty();
+            } else {
+                return false;
+            }
+        }
+    }
+
     public enum AuthStatus {
         SUCCESS,
         USER_NOT_AUTHORIZED,
-        DEVICE_NOT_AUTHORIZED
+        DEVICE_NOT_AUTHORIZED,
+        NOT_A_CHANCE, // Used for unauthorized IP address
+        INVALID_IP_ADDRESS
+    }
+
+    private static final Map<AuthStatus, HttpStatus> authStatusMap;
+    static {
+        authStatusMap = Map.ofEntries(
+                Map.entry(SUCCESS, OK),
+                Map.entry(USER_NOT_AUTHORIZED, UNAUTHORIZED),
+                Map.entry(DEVICE_NOT_AUTHORIZED, FORBIDDEN),
+                Map.entry(NOT_A_CHANCE, I_AM_A_TEAPOT),
+                Map.entry(INVALID_IP_ADDRESS, BAD_REQUEST)
+        );
+    }
+
+    private static int getHttpCode(AuthStatus authStatus) {
+        return authStatusMap.get(authStatus).value();
     }
 
     private AuthStatus authStatus;
-    private String token;
-    private String displayName;
+    private Optional<String> message;
+    private Optional<String> token = Optional.empty();
+    private Optional<String> displayName = Optional.empty();
 
     public AuthStatus getAuthStatus() {
         return authStatus;
     }
 
-    public String getToken() {
+    public Optional<String> getMessage() {
+        return message;
+    }
+
+    public Optional<String> getToken() {
         return token;
     }
 
-    public String getDisplayName() {
+    public Optional<String> getDisplayName() {
         return displayName;
     }
 
-    public AuthResponse(AuthStatus authStatus) {
-        this.authStatus = authStatus;
-        this.token = "";
-        this.displayName = "";
+    public AuthResponse(AuthException ex) {
+        this.authStatus = ex.getAuthStatus();
+        this.message = ex.getResponseMessage();
     }
 
-    public AuthResponse(AuthStatus authStatus, String token,
-                        String displayName) {
-        this.authStatus = authStatus;
-        this.token = token;
-        this.displayName = displayName;
+    private AuthResponse(Builder builder) {
+        this.authStatus = builder.authStatus;
+        this.message = builder.message;
+        this.token = builder.token;
+        this.displayName = builder.displayName;
     }
 
     @Override
     public String toString() {
         ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.put("authStatus", this.authStatus.toString());
+
+        this.message.ifPresent(s -> rootNode.put("message", s));
+        this.token.ifPresent(token -> rootNode.put("token", token));
+        this.displayName.ifPresent(name -> rootNode.put("displayName", name));
+
         try {
-            return mapper.writeValueAsString(this);
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Component
+    @Component(AUTH_RESPONSE_BUILDER_BEAN)
+    @Scope("prototype")
     public static class Builder {
         @Autowired
         Encryption encryption;
@@ -69,29 +124,61 @@ public class AuthResponse {
         @Autowired
         UserService userService;
 
-        public AuthResponse buildErrorResponse(AuthStatus authStatus) {
-            return new AuthResponse(authStatus);
+        private AuthStatus authStatus;
+        private Optional<String> message = Optional.empty();
+        private Optional<String> token = Optional.empty();
+        private Optional<String> displayName = Optional.empty();
+
+        public Builder setAuthStatus(AuthStatus authStatus) {
+            this.authStatus = authStatus;
+            return this;
         }
 
-        public AuthResponse buildSuccessResponse(String deviceId, User user) {
+        public Builder setMessage(String message) {
+            this.message = Optional.of(message);
+            return this;
+        }
+
+        public Builder setToken(String token) {
+            this.token = Optional.of(token);
+            return this;
+        }
+
+        public Builder setDisplayName(String displayName) {
+            this.displayName = Optional.of(displayName);
+            return this;
+        }
+
+        public AuthResponse buildErrorResponse(AuthStatus authStatus,
+                                               HttpServletResponse servletResponse) {
+            this.authStatus = authStatus;
+            servletResponse.setStatus(getHttpCode(authStatus));
+            return new AuthResponse(this);
+        }
+
+        public AuthResponse buildSuccessResponse(String deviceId, User user,
+                                                 HttpServletResponse servletResponse) {
+            servletResponse.setStatus(getHttpCode(SUCCESS));
+
             // If first name is not unique, abbreviate with last initial
-            String displayName = userService.isFirstNameUnique(user.getFirstName()) ?
+            this.displayName = Optional.of(userService.isFirstNameUnique(user.getFirstName()) ?
                     user.getFirstName() : String.format("%s %s.", user.getFirstName(),
-                    String.valueOf(user.getLastName().charAt(0)).toUpperCase());
+                    String.valueOf(user.getLastName().charAt(0)).toUpperCase()));
 
             // Build JWT
             String jwtToken = JWT.create()
                     .withClaim("device-id", deviceId)
                     .withClaim("username", user.getUserId())
-                    .withClaim("display-name", displayName)
+                    .withClaim("display-name", this.displayName.get())
                     .withNotBefore(Instant.now())
                     .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
                     .sign(encryption.getJWTAlgorithm());
 
             // Encrypt token
-            String token = encryption.encryptToAES(jwtToken);
+            this.token = Optional.of(encryption.encryptToAES(jwtToken));
+            this.authStatus = SUCCESS;
 
-            return new AuthResponse(SUCCESS, token, displayName);
+            return new AuthResponse(this);
         }
     }
 }
