@@ -1,34 +1,52 @@
 package com.davidruffner.inventorytrackercontroller.controller.requests;
 
-import com.davidruffner.inventorytrackercontroller.annotations.OneOf;
-import com.davidruffner.inventorytrackercontroller.annotations.RequiredParam;
-import com.davidruffner.inventorytrackercontroller.annotations.Validation;
 import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.validation.annotation.Validated;
+import com.davidruffner.inventorytrackercontroller.util.Utils;
+import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.util.List;
-import java.util.Optional;
+
+import static com.davidruffner.inventorytrackercontroller.util.Utils.isListNullOrEmpty;
 
 public class AddIPAddressRequest extends BaseRequest {
-    @RequiredParam
-    private String token;
-    @OneOf(group = "addresses")
     private List<String> ipv4Addresses;
-    @OneOf(group = "addresses")
     private List<String> ipv6Addresses;
 
-    public AddIPAddressRequest(String token,
-                               List<String> ipv4Addresses,
-                               List<String> ipv6Addresses) throws Exception {
-        this.token = token;
+    public AddIPAddressRequest(List<String> ipv4Addresses, List<String> ipv6Addresses)
+            throws BadRequestException {
         this.ipv4Addresses = ipv4Addresses;
         this.ipv6Addresses = ipv6Addresses;
-        validate(this);
+        validate();
     }
 
-    public String getToken() {
-        return token;
+    @Override
+    protected void validate() throws BadRequestException {
+        if (isListNullOrEmpty(this.ipv4Addresses) && isListNullOrEmpty(this.ipv6Addresses)) {
+            throwBadRequest("At least one of 'ipv4Addresses' and 'ipv6Addresses'" +
+                    " parameters are required");
+        }
+
+        InetAddressValidator addressValidator = new InetAddressValidator();
+        if (null != this.ipv4Addresses) {
+            for (String address : this.ipv4Addresses) {
+                if (!addressValidator.isValidInet4Address(address)) {
+                    throwBadRequest(String.format("IPv4 Address '%s' is invalid", address));
+                }
+            }
+        }
+
+        if (null != this.ipv6Addresses) {
+            for (String address : this.ipv6Addresses) {
+                if (!addressValidator.isValidInet6Address(address)) {
+                    throwBadRequest(String.format("IPv6 Address '%s' is invalid", address));
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void throwBadRequest(String errMsg) throws BadRequestException {
+        throw new BadRequestException.Builder(this.getClass(), errMsg).build();
     }
 
     public List<String> getIpv4Addresses() {

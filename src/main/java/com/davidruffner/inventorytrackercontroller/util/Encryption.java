@@ -1,7 +1,13 @@
 package com.davidruffner.inventorytrackercontroller.util;
 
+import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.davidruffner.inventorytrackercontroller.config.EncryptConfig;
+import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
+import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
+import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +21,8 @@ import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
+import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
+
 @Component
 public class Encryption {
     @Autowired
@@ -22,6 +30,27 @@ public class Encryption {
 
     public Algorithm getJWTAlgorithm() {
         return Algorithm.HMAC256(encryptConfig.getSecretKey());
+    }
+
+    public DecodedJWT getJWTFromToken(String token) throws AuthException, BadRequestException {
+        String decryptedToken = "";
+        try {
+            decryptedToken = decryptFromAES(token);
+        } catch (RuntimeException ex) {
+            throw new BadRequestException.Builder(this.getClass(),
+                    "Given token is invalid").build();
+        }
+
+        try {
+            return JWT.decode(decryptedToken);
+        } catch (JWTDecodeException ex) {
+            throw new AuthException.Builder(USER_NOT_AUTHORIZED, this.getClass())
+                    .setMessage("Given token is invalid")
+                    .build();
+        } catch (Exception ex) {
+            throw new BadRequestException.Builder(this.getClass(),
+                    "Given token is invalid").build();
+        }
     }
 
     public String decryptFromAES(String encryptedMsg) throws RuntimeException {

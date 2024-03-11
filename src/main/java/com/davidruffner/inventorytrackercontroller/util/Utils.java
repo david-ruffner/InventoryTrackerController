@@ -2,6 +2,8 @@ package com.davidruffner.inventorytrackercontroller.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.List;
+
 public class Utils {
     private static final String[] HEADERS_TO_TRY = {
             "X-Forwarded-For",
@@ -25,5 +27,12 @@ public class Utils {
         }
 
         return request.getRemoteAddr();
+    }
+
+    public static <T> boolean isListNullOrEmpty(List<T> list) {
+        if (null == list)
+            return true;
+
+        return list.isEmpty();
     }
 }

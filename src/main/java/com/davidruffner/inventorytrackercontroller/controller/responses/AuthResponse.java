@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.*;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.AUTH_RESPONSE_BUILDER_BEAN;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
 import static org.springframework.http.HttpStatus.*;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -167,9 +167,9 @@ public class AuthResponse {
 
             // Build JWT
             String jwtToken = JWT.create()
-                    .withClaim("device-id", deviceId)
-                    .withClaim("username", user.getUserId())
-                    .withClaim("display-name", this.displayName.get())
+                    .withClaim(DEVICE_ID_JWT_CLAIM, deviceId)
+                    .withClaim(USERNAME_JWT_CLAIM, user.getUserId())
+                    .withClaim(DISPLAY_NAME_JWT_CLAIM, this.displayName.get())
                     .withNotBefore(Instant.now())
                     .withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS))
                     .sign(encryption.getJWTAlgorithm());

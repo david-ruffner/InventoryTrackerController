@@ -19,8 +19,7 @@ import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.DEVICE_NOT_AUTHORIZED;
 import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.AUTH_RESPONSE_BUILDER_BEAN;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.CLIENT_IP_ATTR;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestController
@@ -33,9 +32,10 @@ public class AuthController {
     ApplicationContext appContext;
 
     @PostMapping("/addAuthorizedAddresses")
-    public String addAuthorizedAddresses(@RequestBody AddIPAddressRequest requestBody) throws Exception {
-
-        return "";
+    public String addAuthorizedAddresses(@RequestBody AddIPAddressRequest requestBody,
+                                         HttpServletRequest servletRequest) throws Exception {
+        User user = (User) servletRequest.getAttribute(USER_ATTR);
+        return user.getFirstName();
     }
 
     @PostMapping("/token")

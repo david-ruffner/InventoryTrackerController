@@ -1,6 +1,7 @@
 package com.davidruffner.inventorytrackercontroller.db.entities;
 
 import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
+import com.davidruffner.inventorytrackercontroller.db.services.AllowedIPAddressService;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
 import jakarta.persistence.*;
 import org.apache.commons.validator.routines.InetAddressValidator;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.INVALID_IP_ADDRESS;
+import static com.davidruffner.inventorytrackercontroller.db.entities.AllowedIPAddress.IPVersion.IPV4;
+import static com.davidruffner.inventorytrackercontroller.db.entities.AllowedIPAddress.IPVersion.IPV6;
 
 @Entity
 @Table(name = "AllowedIPAddresses")
@@ -25,6 +28,24 @@ public class AllowedIPAddress {
     private String ipv6Address;
 
     public AllowedIPAddress() {}
+
+    public enum IPVersion {
+        IPV4,
+        IPV6
+    }
+
+    public AllowedIPAddress(String ipAddress, IPVersion ipVersion) {
+        this.ipAddressId = UUID.randomUUID().toString();
+        if (ipVersion.equals(IPV4)) {
+            this.ipv4Address = ipAddress;
+        } else {
+            this.ipv6Address = ipAddress;
+        }
+    }
+
+    public IPVersion getIPVersion() {
+        return (null == this.ipv6Address || this.ipv6Address.isEmpty()) ? IPV4 : IPV6;
+    }
 
     public AllowedIPAddress(String ipAddress) throws AuthException {
         InetAddressValidator validator = InetAddressValidator.getInstance();
