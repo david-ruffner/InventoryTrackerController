@@ -64,6 +64,8 @@ public class AuthController {
                     .build();
         }
 
-        return responseBuilder.buildSuccessResponse(authRequest.getDevice_id(), user, servletResponse);
+        AuthResponse response = responseBuilder.buildSuccessResponse(authRequest.getDevice_id(), user);
+        servletResponse.setStatus(response.getHttpStatusInt());
+        return responseBuilder.buildSuccessResponse(authRequest.getDevice_id(), user);
     }
 }

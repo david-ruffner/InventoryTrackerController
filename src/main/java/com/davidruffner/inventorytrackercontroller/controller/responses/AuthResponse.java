@@ -4,21 +4,19 @@ import com.auth0.jwt.JWT;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
-import com.davidruffner.inventorytrackercontroller.util.Constants;
 import com.davidruffner.inventorytrackercontroller.util.Encryption;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import javax.management.ObjectName;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -30,7 +28,7 @@ import static org.springframework.http.HttpStatus.*;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = AuthResponse.AuthResponseJsonFilter.class)
-public class AuthResponse {
+public class AuthResponse extends BaseResponse {
     public static class AuthResponseJsonFilter {
         @Override
         public boolean equals(Object obj) {
@@ -61,12 +59,8 @@ public class AuthResponse {
         );
     }
 
-    private static int getHttpCode(AuthStatus authStatus) {
-        return authStatusMap.get(authStatus).value();
-    }
-
     private AuthStatus authStatus;
-    private Optional<String> message;
+    private Optional<String> message = Optional.empty();
     private Optional<String> token = Optional.empty();
     private Optional<String> displayName = Optional.empty();
 
@@ -86,9 +80,35 @@ public class AuthResponse {
         return displayName;
     }
 
+    public int getHttpStatusInt() {
+        return authStatusMap.get(this.authStatus).value();
+    }
+
+    public HttpStatus getHttpStatus() {
+        return authStatusMap.get(this.authStatus);
+    }
+
     public AuthResponse(AuthException ex) {
         this.authStatus = ex.getAuthStatus();
         this.message = ex.getResponseMessage();
+    }
+
+    public AuthResponse(String jsonStr) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(jsonStr);
+
+        if (jsonNode.has("authStatus")) {
+            this.authStatus = AuthStatus.valueOf(jsonNode.get("authStatus").asText());
+        } else {
+            throw new RuntimeException("Tried to create AuthResponse object with no authStatus");
+        }
+
+        if (jsonNode.has("message"))
+            this.message = Optional.of(jsonNode.get("message").asText());
+        if (jsonNode.has("token"))
+            this.token = Optional.of(jsonNode.get("token").asText());
+        if (jsonNode.has("displayName"))
+            this.displayName = Optional.of(jsonNode.get("displayName").asText());
     }
 
     private AuthResponse(Builder builder) {
@@ -149,17 +169,7 @@ public class AuthResponse {
             return this;
         }
 
-        public AuthResponse buildErrorResponse(AuthStatus authStatus,
-                                               HttpServletResponse servletResponse) {
-            this.authStatus = authStatus;
-            servletResponse.setStatus(getHttpCode(authStatus));
-            return new AuthResponse(this);
-        }
-
-        public AuthResponse buildSuccessResponse(String deviceId, User user,
-                                                 HttpServletResponse servletResponse) {
-            servletResponse.setStatus(getHttpCode(SUCCESS));
-
+        public AuthResponse buildSuccessResponse(String deviceId, User user) {
             // If first name is not unique, abbreviate with last initial
             this.displayName = Optional.of(userService.isFirstNameUnique(user.getFirstName()) ?
                     user.getFirstName() : String.format("%s %s.", user.getFirstName(),

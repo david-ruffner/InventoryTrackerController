@@ -1,6 +1,8 @@
 package com.davidruffner.inventorytrackercontroller.controller.requests;
 
-public class AuthRequest {
+import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
+
+public class AuthRequest extends BaseRequest {
     private String username;
     private String password;
     private String device_id;
@@ -21,5 +23,15 @@ public class AuthRequest {
 
     public String getDevice_id() {
         return device_id;
+    }
+
+    @Override
+    protected void validate() throws BadRequestException {
+
+    }
+
+    @Override
+    protected void throwBadRequest(String errMsg) throws BadRequestException {
+
     }
 }
