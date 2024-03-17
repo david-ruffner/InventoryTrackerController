@@ -7,6 +7,7 @@ import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -19,6 +20,9 @@ public class InventoryControllerBaseTest {
 
     @Autowired
     protected DeviceRepository deviceRepo;
+
+    @Autowired
+    protected ApplicationContext appContext;
 
     @Value("${server.port}")
     protected int serverPort;

@@ -1,6 +1,5 @@
 package com.davidruffner.inventorytrackercontroller.db.services;
 
-import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
 import com.davidruffner.inventorytrackercontroller.db.entities.AllowedIPAddress;
 import com.davidruffner.inventorytrackercontroller.db.entities.AllowedIPAddress.IPVersion;
 import com.davidruffner.inventorytrackercontroller.db.repositories.AllowedIPAddressRepository;
@@ -10,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.INVALID_IP_ADDRESS;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.BAD_REQUEST;
+
 
 @Service
 public class AllowedIPAddressService {
@@ -36,7 +35,7 @@ public class AllowedIPAddressService {
             validAddress = ipAddress;
         }
         else {
-            throw new AuthException.Builder(INVALID_IP_ADDRESS, this.getClass())
+            throw new AuthException.Builder(BAD_REQUEST, this.getClass())
                     .setMessage(String.format("IP Address: %s is not " +
                             "a valid IPv4 or IPv6 Address", ipAddress))
                     .setIpAddress(ipAddress)

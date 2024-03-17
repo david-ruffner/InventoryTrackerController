@@ -5,67 +5,38 @@ import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
 import com.davidruffner.inventorytrackercontroller.util.Encryption;
+import com.davidruffner.inventorytrackercontroller.util.Logging;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 import java.util.Optional;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.*;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.SUCCESS;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.getHttpStatusFromResponseStatus;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.getResponseStatusFromStr;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
-import static org.springframework.http.HttpStatus.*;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(value = JsonInclude.Include.CUSTOM, valueFilter = AuthResponse.AuthResponseJsonFilter.class)
 public class AuthResponse extends BaseResponse {
-    public static class AuthResponseJsonFilter {
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Optional<?>) {
-                return ((Optional<?>) obj).isEmpty();
-            } else {
-                return false;
-            }
-        }
-    }
+    private static final Logging LOGGER = new Logging(AuthResponse.class);
 
-    public enum AuthStatus {
-        SUCCESS,
-        USER_NOT_AUTHORIZED,
-        DEVICE_NOT_AUTHORIZED,
-        NOT_A_CHANCE, // Used for unauthorized IP address
-        INVALID_IP_ADDRESS
-    }
+    private final Optional<String> message;
+    private final Optional<String> token;
+    private final Optional<String> displayName;
 
-    private static final Map<AuthStatus, HttpStatus> authStatusMap;
-    static {
-        authStatusMap = Map.ofEntries(
-                Map.entry(SUCCESS, OK),
-                Map.entry(USER_NOT_AUTHORIZED, UNAUTHORIZED),
-                Map.entry(DEVICE_NOT_AUTHORIZED, FORBIDDEN),
-                Map.entry(NOT_A_CHANCE, I_AM_A_TEAPOT),
-                Map.entry(INVALID_IP_ADDRESS, BAD_REQUEST)
-        );
-    }
-
-    private AuthStatus authStatus;
-    private Optional<String> message = Optional.empty();
-    private Optional<String> token = Optional.empty();
-    private Optional<String> displayName = Optional.empty();
-
-    public AuthStatus getAuthStatus() {
-        return authStatus;
+    private AuthResponse(Builder builder) {
+        super(builder.responseStatus);
+        this.message = builder.message;
+        this.token = builder.token;
+        this.displayName = builder.displayName;
     }
 
     public Optional<String> getMessage() {
@@ -80,79 +51,25 @@ public class AuthResponse extends BaseResponse {
         return displayName;
     }
 
-    public int getHttpStatusInt() {
-        return authStatusMap.get(this.authStatus).value();
-    }
-
-    public HttpStatus getHttpStatus() {
-        return authStatusMap.get(this.authStatus);
-    }
-
-    public AuthResponse(AuthException ex) {
-        this.authStatus = ex.getAuthStatus();
-        this.message = ex.getResponseMessage();
-    }
-
-    public AuthResponse(String jsonStr) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(jsonStr);
-
-        if (jsonNode.has("authStatus")) {
-            this.authStatus = AuthStatus.valueOf(jsonNode.get("authStatus").asText());
-        } else {
-            throw new RuntimeException("Tried to create AuthResponse object with no authStatus");
-        }
-
-        if (jsonNode.has("message"))
-            this.message = Optional.of(jsonNode.get("message").asText());
-        if (jsonNode.has("token"))
-            this.token = Optional.of(jsonNode.get("token").asText());
-        if (jsonNode.has("displayName"))
-            this.displayName = Optional.of(jsonNode.get("displayName").asText());
-    }
-
-    private AuthResponse(Builder builder) {
-        this.authStatus = builder.authStatus;
-        this.message = builder.message;
-        this.token = builder.token;
-        this.displayName = builder.displayName;
-    }
-
     @Override
-    public String toString() {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
-        rootNode.put("authStatus", this.authStatus.toString());
-
+    public void addJSONChildNodes(ObjectNode rootNode) throws RuntimeException {
         this.message.ifPresent(s -> rootNode.put("message", s));
         this.token.ifPresent(token -> rootNode.put("token", token));
         this.displayName.ifPresent(name -> rootNode.put("displayName", name));
-
-        try {
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Component(AUTH_RESPONSE_BUILDER_BEAN)
     @Scope("prototype")
-    public static class Builder {
+    public static class Builder extends BaseResponseBuilder {
         @Autowired
         Encryption encryption;
 
         @Autowired
         UserService userService;
 
-        private AuthStatus authStatus;
         private Optional<String> message = Optional.empty();
         private Optional<String> token = Optional.empty();
         private Optional<String> displayName = Optional.empty();
-
-        public Builder setAuthStatus(AuthStatus authStatus) {
-            this.authStatus = authStatus;
-            return this;
-        }
 
         public Builder setMessage(String message) {
             this.message = Optional.of(message);
@@ -169,7 +86,68 @@ public class AuthResponse extends BaseResponse {
             return this;
         }
 
-        public AuthResponse buildSuccessResponse(String deviceId, User user) {
+        @Override
+        public void validateChild() throws RuntimeException {
+            if (this.responseStatus.equals(SUCCESS)) {
+                if (isStrEmpty(this.token)) {
+                    LOGGER.error("Tried to build successful AuthResponse " +
+                            "without token being set");
+                    throw new RuntimeException("Tried to build successful AuthResponse " +
+                            "without token being set");
+                } else if (isStrEmpty(this.displayName)) {
+                    LOGGER.error("Tried to build successful AuthResponse " +
+                            "without displayName being set");
+                    throw new RuntimeException("Tried to build successful AuthResponse " +
+                            "without displayName being set");
+                }
+
+            } else {
+                if (isStrEmpty(this.message)) {
+                    LOGGER.error("Tried to build non-successful AuthResponse " +
+                            "without message being set");
+                    throw new RuntimeException("Tried to build non-successful AuthResponse " +
+                            "without message being set");
+                }
+            }
+        }
+
+        @Override
+        public BaseResponse buildResponseObj() {
+            validate();
+            return new AuthResponse(this);
+        }
+
+        @Override
+        public ResponseEntity<String> buildResponseEntity() {
+            validate();
+            return new ResponseEntity<>(new AuthResponse(this).toJSONString(),
+                    getHttpStatusFromResponseStatus(this.responseStatus));
+        }
+
+        @Override
+        public AuthResponse buildResponseFromJSON(String jsonStr) throws RuntimeException {
+            ObjectMapper mapper = new ObjectMapper();
+
+            try {
+                JsonNode jsonNode = mapper.readTree(jsonStr);
+                addJSONParentNode(jsonNode);
+
+                if (jsonNode.has("message"))
+                    this.message = Optional.of(jsonNode.get("message").asText());
+                if (jsonNode.has("token"))
+                    this.token = Optional.of(jsonNode.get("token").asText());
+                if (jsonNode.has("displayName"))
+                    this.displayName = Optional.of(jsonNode.get("displayName").asText());
+
+                validate();
+                return new AuthResponse(this);
+            } catch (Exception ex) {
+                LOGGER.error(ex.getMessage());
+                throw new RuntimeException(ex.getMessage());
+            }
+        }
+
+        private void createSuccessResponse(String deviceId, User user) {
             // If first name is not unique, abbreviate with last initial
             this.displayName = Optional.of(userService.isFirstNameUnique(user.getFirstName()) ?
                     user.getFirstName() : String.format("%s %s.", user.getFirstName(),
@@ -186,8 +164,34 @@ public class AuthResponse extends BaseResponse {
 
             // Encrypt token
             this.token = Optional.of(encryption.encryptToAES(jwtToken));
-            this.authStatus = SUCCESS;
+            this.responseStatus = SUCCESS;
+            validate();
+        }
 
+        public ResponseEntity<String> buildSuccessResponseEntity(String deviceId, User user) {
+            createSuccessResponse(deviceId, user);
+            return new ResponseEntity<>(new AuthResponse(this).toJSONString(), HttpStatus.OK);
+        }
+
+        public AuthResponse buildSuccessResponseObj(String deviceId, User user) {
+            createSuccessResponse(deviceId, user);
+            return new AuthResponse(this);
+        }
+
+        private void createAuthExResponse(AuthException ex) {
+            this.responseStatus = ex.getAuthStatus();
+            this.message = ex.getResponseMessage();
+            validate();
+        }
+
+        public ResponseEntity<String> buildAuthExResponseEntity(AuthException ex) {
+            createAuthExResponse(ex);
+            AuthResponse authResponse = new AuthResponse(this);
+            return new ResponseEntity<>(authResponse.toJSONString(), authResponse.getHttpStatus());
+        }
+
+        public AuthResponse buildAuthExResponseObj(AuthException ex) {
+            createAuthExResponse(ex);
             return new AuthResponse(this);
         }
     }

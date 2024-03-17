@@ -5,7 +5,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.davidruffner.inventorytrackercontroller.config.EncryptConfig;
-import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
 import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,8 @@ import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
+
 
 @Component
 public class Encryption {

@@ -1,22 +1,21 @@
 package com.davidruffner.inventorytrackercontroller.controller;
 
 import com.davidruffner.inventorytrackercontroller.config.EndpointConfig;
-import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.AllowedIPAddressService;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
 import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
-import com.davidruffner.inventorytrackercontroller.util.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.NOT_A_CHANCE;
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.NOT_A_CHANCE;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.CLIENT_IP_ATTR;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.USER_ATTR;
 import static com.davidruffner.inventorytrackercontroller.util.Utils.getClientIpAddress;
 
 @Component

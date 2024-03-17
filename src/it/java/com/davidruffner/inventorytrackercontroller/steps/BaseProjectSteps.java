@@ -4,6 +4,7 @@ import com.davidruffner.inventorytrackercontroller.controller.requests.BaseReque
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -25,14 +26,14 @@ public class BaseProjectSteps extends InventoryControllerBaseTest {
         return String.format(BASE_ENDPOINT, this.serverPort, endpoint);
     }
 
-    protected String doPOSTRequest(BaseRequest jsonRequest, String endpoint, Map<String, String> headerMap) {
+    protected ResponseEntity<String> doPOSTRequest(BaseRequest jsonRequest, String endpoint, Map<String, String> headerMap) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAll(headerMap);
         HttpEntity<BaseRequest> request = new HttpEntity<>(jsonRequest, headers);
 
-        return restTemplate.postForObject(getEndpointURL(endpoint), request, String.class);
+        return restTemplate.postForEntity(getEndpointURL(endpoint), request, String.class);
     }
 
     protected String doPOSTRequest(BaseRequest jsonRequest, String endpoint) {
@@ -43,6 +44,7 @@ public class BaseProjectSteps extends InventoryControllerBaseTest {
     }
 
     protected String getJsonBodyFromException(String exMsg) {
+        exMsg = exMsg.replace("<EOL>", ""); // Note this is only an artifact of restTemplate
         return exMsg.substring(exMsg.indexOf('{'), exMsg.indexOf('}') + 1);
     }
 }

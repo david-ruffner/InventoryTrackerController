@@ -1,45 +1,35 @@
 package com.davidruffner.inventorytrackercontroller.controller;
 
 import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
-import com.davidruffner.inventorytrackercontroller.controller.responses.BadRequestResponse;
+import com.davidruffner.inventorytrackercontroller.controller.responses.GeneralResponse;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
 import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.ApplicationContext;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.NOT_A_CHANCE;
-import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.BAD_REQUEST;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.AUTH_RESPONSE_BUILDER_BEAN;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.GENERAL_RESPONSE_BUILDER_BEAN;
 
 @ControllerAdvice
 public class AuthControllerAdvice {
     @Autowired
-    AuthResponse.Builder responseBuilder;
+    ApplicationContext appContext;
 
     @ExceptionHandler(value = AuthException.class)
-    public @ResponseBody AuthResponse handleAuthException(HttpServletResponse resp, AuthException ex) {
-        if (ex.getAuthStatus().equals(NOT_A_CHANCE)) {
-            resp.setStatus(I_AM_A_TEAPOT.value());
-            return new AuthResponse(ex);
-//            return responseBuilder.setMessage("Flagrant System Error: Not a chance LOL")
-//                            .buildErrorResponse(ex.getAuthStatus());
-        } else {
-            resp.setStatus(UNAUTHORIZED.value());
-            return new AuthResponse(ex);
-//            return responseBuilder.setMessage(ex.getResponseMessage())
-//                    .buildErrorResponse(ex.getAuthStatus());
-        }
+    public ResponseEntity<String> handleAuthException(AuthException ex) {
+        AuthResponse.Builder authResponseBuilder =
+                (AuthResponse.Builder) appContext.getBean(AUTH_RESPONSE_BUILDER_BEAN);
+        return authResponseBuilder.buildAuthExResponseEntity(ex);
     }
 
     @ExceptionHandler(value = BadRequestException.class)
-    public @ResponseBody BadRequestResponse handleBadRequest(HttpServletResponse resp,
-                                                             BadRequestException ex) {
-        resp.setStatus(400);
-        return new BadRequestResponse(ex);
+    public ResponseEntity<String> handleBadRequest(BadRequestException ex) {
+        GeneralResponse.Builder generalResponseBuilder =
+                (GeneralResponse.Builder) appContext.getBean(GENERAL_RESPONSE_BUILDER_BEAN);
+        return generalResponseBuilder.setResponseStatus(BAD_REQUEST).buildResponseEntity();
     }
 }

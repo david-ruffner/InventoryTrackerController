@@ -1,13 +1,13 @@
 package com.davidruffner.inventorytrackercontroller.exceptions;
 
-import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus;
+import com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode;
 import com.davidruffner.inventorytrackercontroller.util.Logging;
 
 import java.util.Optional;
 
 public class AuthException extends Exception {
     private final Logging LOGGER;
-    private final AuthStatus authStatus;
+    private final ResponseStatusCode authStatus;
     private final Class<?> callingClass;
 //    logMessage is used for internal logging, responseMessage is what actually gets returned to the client
     private final String logMessage;
@@ -38,7 +38,7 @@ public class AuthException extends Exception {
         return this.logMessage;
     }
 
-    public AuthStatus getAuthStatus() {
+    public ResponseStatusCode getAuthStatus() {
         return authStatus;
     }
 
@@ -63,14 +63,14 @@ public class AuthException extends Exception {
     }
 
     public static class Builder {
-        private AuthStatus authStatus;
+        private ResponseStatusCode authStatus;
         private Class<?> callingClass;
         private StringBuilder logTemplate = new StringBuilder();
         private Optional<String> message = Optional.empty();
         private Optional<String> userId = Optional.empty();
         private Optional<String> ipAddress = Optional.empty();
 
-        public Builder(AuthStatus authStatus, Class<?> callingClass) {
+        public Builder(ResponseStatusCode authStatus, Class<?> callingClass) {
             this.authStatus = authStatus;
             this.callingClass = callingClass;
             logTemplate.append(String.format("AUTH_ERROR | AuthStatus: %s | Calling Class: %s",

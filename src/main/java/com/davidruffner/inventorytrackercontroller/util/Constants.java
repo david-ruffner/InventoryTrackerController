@@ -10,4 +10,5 @@ public class Constants {
     public static final String USERNAME_JWT_CLAIM = "username";
     public static final String DISPLAY_NAME_JWT_CLAIM = "display-name";
     public static final String USER_ATTR = "user-obj";
+    public static final String GENERAL_RESPONSE_BUILDER_BEAN = "GeneralResponseBuilder";
 }

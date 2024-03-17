@@ -3,6 +3,7 @@ package com.davidruffner.inventorytrackercontroller.controller;
 import com.davidruffner.inventorytrackercontroller.controller.requests.AddIPAddressRequest;
 import com.davidruffner.inventorytrackercontroller.controller.requests.AuthRequest;
 import com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse;
+import com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
 import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
@@ -17,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.DEVICE_NOT_AUTHORIZED;
-import static com.davidruffner.inventorytrackercontroller.controller.responses.AuthResponse.AuthStatus.USER_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.DEVICE_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -39,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public @ResponseBody AuthResponse getToken(@RequestBody AuthRequest authRequest,
+    public ResponseEntity<String> getToken(@RequestBody AuthRequest authRequest,
                                                HttpServletRequest servletRequest,
                                                HttpServletResponse servletResponse) throws AuthException {
         Optional<User> userOpt = userService.getUser(authRequest.getUsername(), authRequest.getPassword());
@@ -64,8 +65,6 @@ public class AuthController {
                     .build();
         }
 
-        AuthResponse response = responseBuilder.buildSuccessResponse(authRequest.getDevice_id(), user);
-        servletResponse.setStatus(response.getHttpStatusInt());
-        return responseBuilder.buildSuccessResponse(authRequest.getDevice_id(), user);
+        return responseBuilder.buildSuccessResponseEntity(authRequest.getDevice_id(), user);
     }
 }
