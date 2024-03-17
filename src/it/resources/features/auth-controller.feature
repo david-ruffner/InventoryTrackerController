@@ -10,3 +10,5 @@ Feature: Valid users can get a token
   Scenario: client with invalid IP address makes POST call to /token
     When the client calls token with invalid IPv4 address
     Then the client receives a bad request response
+
+#  Scenario: client with invalid username or password

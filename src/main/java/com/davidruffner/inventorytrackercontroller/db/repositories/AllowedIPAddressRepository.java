@@ -4,6 +4,7 @@ import com.davidruffner.inventorytrackercontroller.db.entities.AllowedIPAddress;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AllowedIPAddressRepository extends CrudRepository<AllowedIPAddress, String> {
@@ -15,4 +16,13 @@ public interface AllowedIPAddressRepository extends CrudRepository<AllowedIPAddr
             """
     )
     Optional<AllowedIPAddress> getAllowedIPAddress(String ipAddress);
+
+    @Query(
+            value = """
+                select ip
+                from AllowedIPAddress ip
+                where ip.ipv4Address like '%/%'
+            """
+    )
+    Optional<List<AllowedIPAddress>> getAllowedIPAddressRanges();
 }

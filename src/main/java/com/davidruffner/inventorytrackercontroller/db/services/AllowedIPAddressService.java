@@ -26,6 +26,7 @@ public class AllowedIPAddressService {
     }
 
     public boolean isIPAddressAllowed(String ipAddress) throws AuthException {
+        //TODO: Need to use the new IPAddress validation library to simplify things
         InetAddressValidator validator = InetAddressValidator.getInstance();
         String validAddress;
 
