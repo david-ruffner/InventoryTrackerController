@@ -1,6 +1,6 @@
 package com.davidruffner.inventorytrackercontroller.db.entities;
 
-import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
+import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -46,7 +46,11 @@ public class AllowedIPAddress {
         return (null == this.ipv6Address || this.ipv6Address.isEmpty()) ? IPV4 : IPV6;
     }
 
-    public AllowedIPAddress(String ipAddress) throws AuthException {
+    /**
+     * Checks if a given ipAddress string is a valid IPv4 or IPv6 address,
+     * and then checks if that address is allowed to access the service.
+     */
+    public AllowedIPAddress(String ipAddress) throws ControllerException {
         InetAddressValidator validator = InetAddressValidator.getInstance();
         if (validator.isValidInet4Address(ipAddress)) {
             this.ipAddressId = UUID.randomUUID().toString();
@@ -56,9 +60,8 @@ public class AllowedIPAddress {
             this.ipv6Address = ipAddress;
         }
         else {
-            throw new AuthException.Builder(BAD_REQUEST, this.getClass())
-                    .setIpAddress(ipAddress)
-                    .setMessage(String.format("IP Address: %s is not " +
+            throw new ControllerException.Builder(BAD_REQUEST, this.getClass())
+                    .withResponseMessage(String.format("IP Address: %s is not " +
                             "a valid IPv4 or IPv6 Address", ipAddress))
                     .build();
         }

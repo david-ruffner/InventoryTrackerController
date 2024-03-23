@@ -17,7 +17,8 @@ public class ResponseStatus {
         USER_NOT_AUTHORIZED,
         DEVICE_NOT_AUTHORIZED,
         NOT_A_CHANCE, // Used for unauthorized IP address
-        BAD_REQUEST
+        BAD_REQUEST,
+        INTERNAL_ERROR
     }
 
     private static final Map<ResponseStatusCode, HttpStatus> responseStatusToHttpStatusMap;
@@ -27,7 +28,8 @@ public class ResponseStatus {
                 Map.entry(USER_NOT_AUTHORIZED, UNAUTHORIZED),
                 Map.entry(DEVICE_NOT_AUTHORIZED, FORBIDDEN),
                 Map.entry(NOT_A_CHANCE, I_AM_A_TEAPOT),
-                Map.entry(BAD_REQUEST, HttpStatus.BAD_REQUEST)
+                Map.entry(BAD_REQUEST, HttpStatus.BAD_REQUEST),
+                Map.entry(INTERNAL_ERROR, INTERNAL_SERVER_ERROR)
         );
     }
 
@@ -38,7 +40,8 @@ public class ResponseStatus {
                 Map.entry(USER_NOT_AUTHORIZED, "USER_NOT_AUTHORIZED"),
                 Map.entry(DEVICE_NOT_AUTHORIZED, "DEVICE_NOT_AUTHORIZED"),
                 Map.entry(NOT_A_CHANCE, "NOT_A_CHANCE"),
-                Map.entry(BAD_REQUEST, "BAD_REQUEST")
+                Map.entry(BAD_REQUEST, "BAD_REQUEST"),
+                Map.entry(INTERNAL_ERROR, "INTERNAL_ERROR")
         );
     }
 

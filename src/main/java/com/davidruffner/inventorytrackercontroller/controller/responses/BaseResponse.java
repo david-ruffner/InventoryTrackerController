@@ -6,6 +6,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.*;
 
@@ -32,7 +35,11 @@ public abstract class BaseResponse {
 
     protected abstract void addJSONChildNodes(ObjectNode rootNode) throws RuntimeException;
 
-    public String toJSONString() throws RuntimeException {
+    public ResponseEntity<String> getJSONResponse() throws RuntimeException {
+        return new ResponseEntity<>(toJSONString(), getHttpStatusFromResponseStatus(this.responseStatus));
+    }
+
+    private String toJSONString() throws RuntimeException {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 
@@ -45,5 +52,13 @@ public abstract class BaseResponse {
             LOGGER.error(e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    protected boolean isStrEmpty(String str) {
+        return (null == str || str.isEmpty());
+    }
+
+    protected boolean isStrEmpty(Optional<String> str) {
+        return str.filter(this::isStrEmpty).isPresent();
     }
 }

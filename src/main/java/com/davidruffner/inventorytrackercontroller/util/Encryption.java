@@ -5,8 +5,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.davidruffner.inventorytrackercontroller.config.EncryptConfig;
-import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
-import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
+import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.INTERNAL_ERROR;
 import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
 
 
@@ -32,24 +33,33 @@ public class Encryption {
         return Algorithm.HMAC256(encryptConfig.getSecretKey());
     }
 
-    public DecodedJWT getJWTFromToken(String token) throws AuthException, BadRequestException {
+    public DecodedJWT getJWTFromToken(String token, HttpServletRequest servletRequest)
+            throws ControllerException {
         String decryptedToken = "";
         try {
             decryptedToken = decryptFromAES(token);
         } catch (RuntimeException ex) {
-            throw new BadRequestException.Builder(this.getClass(),
-                    "Given token is invalid").build();
+            throw new ControllerException.Builder(USER_NOT_AUTHORIZED, this.getClass())
+                    .withErrorMessage(ex.getMessage())
+                    .withUnauthorizedResponseMessage()
+                    .withIpAddress(servletRequest)
+                    .build();
         }
 
         try {
             return JWT.decode(decryptedToken);
         } catch (JWTDecodeException ex) {
-            throw new AuthException.Builder(USER_NOT_AUTHORIZED, this.getClass())
-                    .setMessage("Given token is invalid")
+            throw new ControllerException.Builder(USER_NOT_AUTHORIZED, this.getClass())
+                    .withErrorMessage(ex.getMessage())
+                    .withUnauthorizedResponseMessage()
+                    .withIpAddress(servletRequest)
                     .build();
         } catch (Exception ex) {
-            throw new BadRequestException.Builder(this.getClass(),
-                    "Given token is invalid").build();
+            throw new ControllerException.Builder(INTERNAL_ERROR, this.getClass())
+                    .withErrorMessage(ex.getMessage())
+                    .withInternalErrorResponseMessage()
+                    .withIpAddress(servletRequest)
+                    .build();
         }
     }
 

@@ -1,23 +1,18 @@
 package com.davidruffner.inventorytrackercontroller.db;
 
-import com.davidruffner.inventorytrackercontroller.db.entities.Device;
 import com.davidruffner.inventorytrackercontroller.db.entities.ScannableItem;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.repositories.ScannableItemRepository;
 import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepository;
 import com.davidruffner.inventorytrackercontroller.db.services.ScannableItemService;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
-import com.davidruffner.inventorytrackercontroller.exceptions.ItemException;
-import com.davidruffner.inventorytrackercontroller.util.Constants;
+import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-
-import java.util.List;
 
 import static com.davidruffner.inventorytrackercontroller.util.Constants.MAX_ITEM_COUNT;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.MIN_ITEM_COUNT;
@@ -134,7 +129,7 @@ public class ScannableItemDBTest {
         user.addScannableItem(item);
         userRepo.save(user);
 
-        assertThrows(ItemException.class, () -> {
+        assertThrows(ControllerException.class, () -> {
             scannableItemService.increaseItemCount(item);
         });
     }
@@ -174,7 +169,7 @@ public class ScannableItemDBTest {
         user.addScannableItem(item);
         userRepo.save(user);
 
-        assertThrows(ItemException.class, () -> {
+        assertThrows(ControllerException.class, () -> {
             scannableItemService.decreaseItemCount(item);
         });
     }

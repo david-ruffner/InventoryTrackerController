@@ -4,8 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.repositories.ScannableItemRepository;
 import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepository;
-import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
-import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
+import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import com.davidruffner.inventorytrackercontroller.util.Encryption;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -15,8 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.CLIENT_IP_ATTR;
-import static com.davidruffner.inventorytrackercontroller.util.Constants.USERNAME_JWT_CLAIM;
+import static com.davidruffner.inventorytrackercontroller.util.Constants.*;
 
 @Service
 public class UserService {
@@ -41,14 +39,19 @@ public class UserService {
     }
 
     public User getUserFromToken(String token, HttpServletRequest servletRequest)
-            throws AuthException, BadRequestException {
-        DecodedJWT decodedJWT = encryptionService.getJWTFromToken(token);
+            throws ControllerException {
+        DecodedJWT decodedJWT = encryptionService.getJWTFromToken(token, servletRequest);
         String username = decodedJWT.getClaim(USERNAME_JWT_CLAIM).asString();
+        String deviceId = decodedJWT.getClaim(DEVICE_ID_JWT_CLAIM).asString();
 
         return userRepo.findById(username).orElseThrow(() ->
-                new AuthException.Builder(USER_NOT_AUTHORIZED, this.getClass())
-                        .setMessage("Given token is invalid")
-                        .setIpAddress(servletRequest.getAttribute(CLIENT_IP_ATTR).toString())
+                new ControllerException.Builder(USER_NOT_AUTHORIZED, this.getClass())
+                        .withErrorMessage(String.format(
+                                "Username '%s' from token doesn't exist", username))
+                        .withUnauthorizedResponseMessage()
+                        .withUserId(username)
+                        .withDeviceId(deviceId)
+                        .withIpAddress(servletRequest)
                         .build());
     }
 

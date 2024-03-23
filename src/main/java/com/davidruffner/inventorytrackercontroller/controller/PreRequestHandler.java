@@ -4,16 +4,14 @@ import com.davidruffner.inventorytrackercontroller.config.EndpointConfig;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
 import com.davidruffner.inventorytrackercontroller.db.services.AllowedIPAddressService;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
-import com.davidruffner.inventorytrackercontroller.exceptions.AuthException;
-import com.davidruffner.inventorytrackercontroller.exceptions.BadRequestException;
+import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.NOT_A_CHANCE;
-import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.USER_NOT_AUTHORIZED;
+import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode.*;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.CLIENT_IP_ATTR;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.USER_ATTR;
 import static com.davidruffner.inventorytrackercontroller.util.Utils.getClientIpAddress;
@@ -31,15 +29,16 @@ public class PreRequestHandler implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-                             Object handler) throws Exception {
+                             Object handler) throws ControllerException {
         String clientIp = getClientIpAddress(request);
         request.setAttribute(CLIENT_IP_ATTR, clientIp);
 
         if (!addressService.isIPAddressAllowed(clientIp)) {
-            throw new AuthException.Builder(NOT_A_CHANCE, this.getClass())
-                    .setMessage(String.format("IP Address: %s is not allowed " +
+            throw new ControllerException.Builder(NOT_A_CHANCE, this.getClass())
+                    .withErrorMessage(String.format("IP Address: %s is not allowed " +
                             "to access this resource", clientIp))
-                    .setIpAddress(clientIp)
+                    .withUnauthorizedResponseMessage()
+                    .withIpAddress(request)
                     .build();
         }
 
@@ -48,17 +47,22 @@ public class PreRequestHandler implements HandlerInterceptor {
         if (!requestURI.equals("/auth/token")) {
             String tokenHeader = request.getHeader("Authorization");
             if (null == tokenHeader || tokenHeader.isEmpty()) {
-                throw new BadRequestException.Builder(this.getClass(),
-                        "Client must include bearer token in Authorization header").build();
+                throw new ControllerException.Builder(BAD_REQUEST, this.getClass())
+                        .withResponseMessage("Request must include bearer token " +
+                                "in Authorization header")
+                        .withIpAddress(request)
+                        .build();
             }
             String token = tokenHeader.replace("Bearer", "").trim();
             User user = userService.getUserFromToken(token, request);
 
             // Check if user is trying to access an admin endpoint
             if (endpointConfig.isEndpointAdmin(requestURI) && !user.isAdmin()) {
-                throw new AuthException.Builder(USER_NOT_AUTHORIZED, this.getClass())
-                        .setMessage("User is not allowed to access this endpoint")
-                        .setIpAddress(clientIp)
+                throw new ControllerException.Builder(USER_NOT_AUTHORIZED, this.getClass())
+                        .withErrorMessage(String.format("User '%s' is not allowed to " +
+                                "access this endpoint", user.getUserId()))
+                        .withUnauthorizedResponseMessage()
+                        .withIpAddress(request)
                         .build();
             }
 
