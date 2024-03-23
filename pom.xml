@@ -135,6 +135,13 @@
             <version>5.5.0</version>
         </dependency>
 
+<!--        Used for javadoc generation in Intellij-->
+        <dependency>
+            <groupId>org.apiguardian</groupId>
+            <artifactId>apiguardian-api</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -142,6 +149,17 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+<!--                    <excludePackageNames>-->
+<!--                        com.davidruffner.inventorytrackercontroller.scratch-->
+<!--                    </excludePackageNames>-->
+<!--                    <force>true</force>-->
+                </configuration>
             </plugin>
         </plugins>
     </build>

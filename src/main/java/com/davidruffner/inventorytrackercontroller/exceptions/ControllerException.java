@@ -29,30 +29,56 @@ public class ControllerException extends Exception {
         this.ipAddress = builder.ipAddress;
     }
 
+    /**
+     * Predefined status codes to return to the client
+     */
     public ResponseStatusCode getResponseStatus() {
         return responseStatus;
     }
 
+    /**
+     * The class that called the original exception
+     */
     public Class<?> getCallingClass() {
         return callingClass;
     }
 
+    /**
+     * responseMessage is the message that gets sent back to
+     * the client. This is used for generalized error messages
+     * where you don't want to give the client more info than needed.
+     */
     public Optional<String> getResponseMessage() {
         return responseMessage;
     }
 
+    /**
+     * errorMessage is the message that gets logged on the backend.
+     * This can contain sensitive error information since it is not
+     * being sent back to the client. If no errorMessage is provided,
+     * it will be set to the responseMessage.
+     */
     public Optional<String> getErrorMessage() {
         return errorMessage;
     }
 
+    /**
+     * The userId from the client's token
+     */
     public Optional<String> getUserId() {
         return userId;
     }
 
+    /**
+     * The deviceId given by the client
+     */
     public Optional<String> getDeviceId() {
         return deviceId;
     }
 
+    /**
+     * The ipAddress given by the client
+     */
     public Optional<String> getIpAddress() {
         return ipAddress;
     }
@@ -101,34 +127,11 @@ public class ControllerException extends Exception {
 
     public static class Builder {
         private final ResponseStatusCode responseStatus;
-        /**
-         * The class that called the original exception
-         */
         private final Class<?> callingClass;
-        /**
-         * responseMessage is the message that gets sent back to
-         * the client. This is used for generalized error messages
-         * where you don't want to give the client more info than needed.
-         */
         private Optional<String> responseMessage = Optional.empty();
-        /**
-         * errorMessage is the message that gets logged on the backend.
-         * This can contain sensitive error information since it is not
-         * being sent back to the client. If no errorMessage is provided,
-         * it will be set to the responseMessage.
-         */
         private Optional<String> errorMessage = Optional.empty();
-        /**
-         * The userId from the client's token
-         */
         private Optional<String> userId = Optional.empty();
-        /**
-         * The deviceId given by the client
-         */
         private Optional<String> deviceId = Optional.empty();
-        /**
-         * The ipAddress given by the client
-         */
         private Optional<String> ipAddress = Optional.empty();
 
         public Builder(ResponseStatusCode responseStatus, Class<?> callingClass) {
