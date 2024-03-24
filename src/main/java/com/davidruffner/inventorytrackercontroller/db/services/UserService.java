@@ -7,6 +7,7 @@ import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepositor
 import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import com.davidruffner.inventorytrackercontroller.util.Encryption;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,6 +84,23 @@ public class UserService {
                         .withIpAddress(servletRequest)
                         .build());
     }
+
+    @Transactional
+    public UserHelper getUserWithScannableItems(String username, String password) {
+        Optional<User> user = userRepo.findById(username);
+        if (user.isEmpty())
+            return getErrorUser(String.format("Username '%s' not found in the system", username));
+
+        if (!DigestUtils.sha256Hex(password).equals(user.get().getSecret()))
+            return getErrorUser(String.format("Password for user '%s' was invalid", username));
+
+        user.get().getScannableItems().size();
+        return getSuccessUser(user.get());
+    }
+//    public User getUserWithScannableItems(User user) {
+//        user.getScannableItems().size();
+//        return user;
+//    }
 
     public boolean isUserDeviceAuthorized(User user, String device_id) {
         return user.getAuthorizedDevices().stream().anyMatch(device ->

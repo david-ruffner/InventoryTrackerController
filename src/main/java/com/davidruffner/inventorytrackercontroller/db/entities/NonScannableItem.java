@@ -2,106 +2,137 @@ package com.davidruffner.inventorytrackercontroller.db.entities;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
+import static jakarta.persistence.CascadeType.ALL;
 
 @Entity
 @Table(name = "NonScannableItems")
-public class NonScannableItem {
-    @Id
-    @Column(name = "Item_ID")
-    private String itemId;
+public class NonScannableItem extends BaseItem {
+    @ManyToOne()
+    @JoinColumn(name = "Manufacturer_ID")
+    private Manufacturer manufacturer;
 
-    @ManyToOne
-    @JoinColumn(name = "User_ID", nullable = false)
-    private User user;
+    @Column(name = "Model_Name")
+    private String modelName;
 
-    @Column(name = "Item_Name", nullable = false)
-    private String itemName;
+    @Column(name = "Color_Hex")
+    private String colorHex;
 
-    @Column(name = "Current_Count", nullable = false)
-    private Integer currentCount;
+    @Column(name = "Serial_Number")
+    private String serialNumber;
 
-    @Column(name = "Threshold", nullable = false)
-    private Integer threshold;
+    @OneToMany(cascade = ALL, orphanRemoval = true)
+    private List<ItemPicture> itemPictures = new ArrayList<>();
 
-    @Column(name = "Cost")
-    private Float cost;
-
-    public User getUser() {
-        return user;
+    public Manufacturer getManufacturer() {
+        return manufacturer;
     }
 
-    public NonScannableItem setUser(User user) {
-        this.user = user;
+    public String getModelName() {
+        return modelName;
+    }
+
+    public String getColorHex() {
+        return colorHex;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public List<ItemPicture> getItemPictures() {
+        return itemPictures;
+    }
+
+    public NonScannableItem setManufacturer(Manufacturer manufacturer) {
+        this.manufacturer = manufacturer;
         return this;
     }
 
-    public String getItemName() {
-        return itemName;
-    }
-
-    public NonScannableItem setItemName(String itemName) {
-        this.itemName = itemName;
+    public NonScannableItem setModelName(String modelName) {
+        this.modelName = modelName;
         return this;
     }
 
-    public Integer getCurrentCount() {
-        return currentCount;
-    }
-
-    public NonScannableItem setCurrentCount(Integer currentCount) {
-        this.currentCount = currentCount;
+    public NonScannableItem setColorHex(String colorHex) {
+        this.colorHex = colorHex;
         return this;
     }
 
-    public Integer getThreshold() {
-        return threshold;
-    }
-
-    public NonScannableItem setThreshold(Integer threshold) {
-        this.threshold = threshold;
+    public NonScannableItem setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
         return this;
     }
 
-    public Float getCost() {
-        return cost;
+    public void addItemPicture(ItemPicture itemPicture) {
+        this.itemPictures.add(itemPicture);
     }
 
-    public NonScannableItem setCost(Float cost) {
-        this.cost = cost;
+    public void removeItemPicture(ItemPicture itemPicture) {
+        this.itemPictures.remove(itemPicture);
+    }
+
+    public NonScannableItem setItemPictures(List<ItemPicture> itemPictures) {
+        this.itemPictures = itemPictures;
         return this;
     }
 
     public NonScannableItem() {}
 
     public NonScannableItem(Builder builder) {
-        this.itemId = builder.itemId;
-        this.user = builder.user;
-        this.itemName = builder.itemName;
-        this.currentCount = builder.currentCount;
-        builder.cost.ifPresent(cost -> this.cost = cost);
+        super(builder.user, builder.itemName, builder.cost);
+        builder.manufacturer.ifPresent(m -> this.manufacturer = m);
+        builder.modelName.ifPresent(s -> this.modelName = s);
+        builder.colorHex.ifPresent(s -> this.colorHex = s);
+        builder.serialNumber.ifPresent(s -> this.serialNumber = s);
+        builder.itemPictures.ifPresent(s -> this.itemPictures = s);
     }
 
     public static class Builder {
-        private String itemId;
         private User user;
         private String itemName;
-        private Integer currentCount;
-        private Integer threshold;
-        private Optional<Float> cost;
+        private Optional<Float> cost = Optional.empty();
+        private Optional<Manufacturer> manufacturer = Optional.empty();
+        private Optional<String> modelName = Optional.empty();
+        private Optional<String> colorHex = Optional.empty();
+        private Optional<String> serialNumber = Optional.empty();
+        private Optional<List<ItemPicture>> itemPictures = Optional.empty();
 
-        public Builder(User user, String itemName, Integer currentCount, Integer threshold) {
-            this.itemId = UUID.randomUUID().toString();
+        public Builder(User user, String itemName) {
             this.user = user;
             this.itemName = itemName;
-            this.currentCount = currentCount;
-            this.threshold = threshold;
-            this.cost = Optional.empty();
+        }
+
+        public Builder setItemPictures(List<ItemPicture> itemPictures) {
+            this.itemPictures = Optional.of(itemPictures);
+            return this;
         }
 
         public Builder setCost(Float cost) {
             this.cost = Optional.of(cost);
+            return this;
+        }
+
+        public Builder setManufacturer(Manufacturer manufacturer) {
+            this.manufacturer = Optional.of(manufacturer);
+            return this;
+        }
+
+        public Builder setModelName(String modelName) {
+            this.modelName = Optional.of(modelName);
+            return this;
+        }
+
+        public Builder setColorHex(String colorHex) {
+            this.colorHex = Optional.of(colorHex);
+            return this;
+        }
+
+        public Builder setSerialNumber(String serialNumber) {
+            this.serialNumber = Optional.of(serialNumber);
             return this;
         }
 

@@ -43,7 +43,9 @@ public class ScannableItemService {
             throw new ControllerException.Builder(ResponseStatus.ResponseStatusCode.INTERNAL_ERROR, this.getClass())
                     .withResponseMessage(String.format("Item ID: %s cannot be increased past %d",
                             item.getItemId(), MAX_ITEM_COUNT))
-                    .withUserId(item.getUser().getUserId())
+                    // TODO: Fix this
+//                    .withUserId(item.getUser().getUserId())
+                    .withUserId("")
                     .build();
         }
     }
@@ -56,7 +58,8 @@ public class ScannableItemService {
             throw new ControllerException.Builder(ResponseStatus.ResponseStatusCode.INTERNAL_ERROR, this.getClass())
                     .withResponseMessage(String.format("Item ID: %s cannot be decreased past %d",
                             item.getItemId(), MIN_ITEM_COUNT))
-                    .withUserId(item.getUser().getUserId())
+//                    .withUserId(item.getUser().getUserId()) // TODO: Fix this
+                    .withUserId("")
                     .build();
         }
     }

@@ -1,12 +1,11 @@
 package com.davidruffner.inventorytrackercontroller.db.entities;
 
 import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
-import static jakarta.persistence.CascadeType.*;
+import static jakarta.persistence.CascadeType.ALL;
 
 @Entity
 @Table(name = "Users")
@@ -39,9 +38,14 @@ public class User {
     )
     private List<Device> authorizedDevices = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = ALL, fetch = FetchType.EAGER,
-    orphanRemoval = true)
+    @OneToMany(cascade = ALL, orphanRemoval = true)
     private List<ScannableItem> scannableItems = new ArrayList<>();
+
+    @OneToMany(cascade = ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<NonScannableItem> nonScannableItems = new ArrayList<>();
+
+    @OneToMany(cascade = ALL, orphanRemoval = true)
+    private List<Manufacturer> manufacturers = new ArrayList<>();
 
     public User() {}
 
@@ -106,11 +110,36 @@ public class User {
 
     public void addScannableItem(ScannableItem item) {
         this.scannableItems.add(item);
-        item.setUser(this);
     }
 
     public void removeScannableItem(ScannableItem item) {
         this.scannableItems.remove(item);
+    }
+
+    public void addNonScannableItem(NonScannableItem item) {
+        this.nonScannableItems.add(item);
+    }
+
+    public void removeNonScannableItem(NonScannableItem item) {
+        this.nonScannableItems.remove(item);
+    }
+
+    public List<NonScannableItem> getNonScannableItems() {
+        return nonScannableItems;
+    }
+
+    public User setNonScannableItems(List<NonScannableItem> nonScannableItems) {
+        this.nonScannableItems = nonScannableItems;
+        return this;
+    }
+
+    public List<Manufacturer> getManufacturers() {
+        return manufacturers;
+    }
+
+    public User setManufacturers(List<Manufacturer> manufacturers) {
+        this.manufacturers = manufacturers;
+        return this;
     }
 
     public List<Device> getAuthorizedDevices() {

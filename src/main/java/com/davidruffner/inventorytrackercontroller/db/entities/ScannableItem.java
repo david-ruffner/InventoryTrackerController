@@ -1,59 +1,37 @@
 package com.davidruffner.inventorytrackercontroller.db.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Entity
 @Table(name = "ScannableItems")
-public class ScannableItem {
-    @Id
-    @Column(name = "Item_ID")
-    private String itemId;
-
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "userId")
-    private User user;
-
-    @Column(name = "Item_Name", nullable = false)
-    private String itemName;
-
-    @Column(name = "Main_Barcode", nullable = false)
+public class ScannableItem extends BaseItem {
+    @Column(name = "Main_Barcode")
     private String mainBarcode;
 
     @Column(name = "Alt_Barcode")
     private String altBarcode;
 
-    @Column(name = "Current_Count", nullable = false)
+    @Column(name = "Current_Count")
     private Integer currentCount;
 
-    @Column(name = "Threshold", nullable = false)
+    @Column(name = "Threshold")
     private Integer threshold;
 
-    @Column(name = "Cost")
-    private Float cost;
-
-    public String getItemId() {
-        return itemId;
+    public ScannableItem() {
+        super();
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public ScannableItem setUser(User user) {
-        this.user = user;
-        return this;
-    }
-
-    public String getItemName() {
-        return itemName;
-    }
-
-    public ScannableItem setItemName(String itemName) {
-        this.itemName = itemName;
-        return this;
+    public ScannableItem(User user, String itemName, Float cost, String mainBarcode,
+                         String altBarcode, Integer currentCount, Integer threshold) {
+        super(user, itemName, cost);
+        this.mainBarcode = mainBarcode;
+        this.altBarcode = altBarcode;
+        this.currentCount = currentCount;
+        this.threshold = threshold;
     }
 
     public String getMainBarcode() {
@@ -100,41 +78,25 @@ public class ScannableItem {
         return this;
     }
 
-    public Float getCost() {
-        return cost;
-    }
-
-    public ScannableItem setCost(Float cost) {
-        this.cost = cost;
-        return this;
-    }
-
-    public ScannableItem() {}
-
     public ScannableItem(Builder builder) {
-        this.itemId = builder.itemId;
-        this.user = builder.user;
-        this.itemName = builder.itemName;
+        super(builder.user, builder.itemName, builder.cost);
         this.mainBarcode = builder.mainBarcode;
         this.currentCount = builder.currentCount;
         this.threshold = builder.threshold;
         builder.altBarcode.ifPresent(s -> this.altBarcode = s);
-        builder.cost.ifPresent(cost -> this.cost = cost);
     }
 
     public static class Builder {
-        private String itemId;
         private User user;
         private String itemName;
+        private Optional<Float> cost;
         private String mainBarcode;
-        private Optional<String> altBarcode;
         private Integer currentCount;
         private Integer threshold;
-        private Optional<Float> cost;
+        private Optional<String> altBarcode;
 
         public Builder(User user, String itemName, String mainBarcode,
                        Integer currentCount, Integer threshold) {
-            this.itemId = UUID.randomUUID().toString();
             this.user = user;
             this.itemName = itemName;
             this.mainBarcode = mainBarcode;
