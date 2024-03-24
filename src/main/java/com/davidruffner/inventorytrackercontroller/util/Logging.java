@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.util.Logging.LogLevel.*;
 
@@ -62,9 +63,52 @@ public class Logging {
                 getStrFromLogLevel(ERROR), this.className, errMsg));
     }
 
-    public void error(String userId, String errMsg) {
-        this.LOGGER.error(String.format("%s | Class: %s | User ID: %s |" +
-                " Error Message: %s", getStrFromLogLevel(ERROR), this.className, userId, errMsg));
+    public static class ErrorLogBuilder {
+        private final String errMsg;
+        private final Class<?> className;
+        private final Logger LOGGER;
+        private Optional<String> userId = Optional.empty();
+        private Optional<String> deviceId = Optional.empty();
+        private Optional<String> ipAddress = Optional.empty();
+
+        private ErrorLogBuilder(String errMsg, Class<?> className) {
+            this.errMsg = errMsg;
+            this.className = className;
+            this.LOGGER = LoggerFactory.getLogger(this.className);
+        }
+
+        public static ErrorLogBuilder newErrorLogBuilder(String errMsg, Class<?> className) {
+            return new ErrorLogBuilder(errMsg, className);
+        }
+
+        public ErrorLogBuilder withUserId(String userId) {
+            this.userId = Optional.of(userId);
+            return this;
+        }
+
+        public ErrorLogBuilder withDeviceId(String deviceId) {
+            this.deviceId = Optional.of(deviceId);
+            return this;
+        }
+
+        public ErrorLogBuilder withIpAddress(String ipAddress) {
+            this.ipAddress = Optional.of(ipAddress);
+            return this;
+        }
+
+        public void log() {
+            StringBuilder logBuilder = new StringBuilder(String.format(
+                    "%s | Class: %s | Error Msg: %s", getStrFromLogLevel(ERROR),
+                    this.className, this.errMsg));
+            this.userId.ifPresent(userId -> logBuilder.append(
+                    String.format(" | User ID: %s", userId)));
+            this.deviceId.ifPresent(deviceId -> logBuilder.append(
+                    String.format(" | Device ID: %s", deviceId)));
+            this.ipAddress.ifPresent(ipAddress -> logBuilder.append(
+                    String.format(" | IP Address: %s", ipAddress)));
+
+            this.LOGGER.error(logBuilder.toString());
+        }
     }
 
     public void warn(String errMsg) {

@@ -1,6 +1,7 @@
 package com.davidruffner.inventorytrackercontroller.steps;
 
-import com.davidruffner.inventorytrackercontroller.db.repositories.AllowedIPAddressRepository;
+import com.davidruffner.inventorytrackercontroller.FunctionalTestConfig;
+import com.davidruffner.inventorytrackercontroller.config.AuthFilteringConfig;
 import com.davidruffner.inventorytrackercontroller.db.repositories.DeviceRepository;
 import com.davidruffner.inventorytrackercontroller.db.repositories.UserRepository;
 import io.cucumber.spring.CucumberContextConfiguration;
@@ -12,8 +13,14 @@ import org.springframework.context.ApplicationContext;
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class InventoryControllerBaseTest {
+    @Value("http://localhost:${server.port:8080}")
+    protected String hostURL;
+
     @Autowired
-    protected AllowedIPAddressRepository allowedIPAddressRepo;
+    private FunctionalTestConfig functionalTestConfig;
+
+    @Autowired
+    protected AuthFilteringConfig authFilteringConfig;
 
     @Autowired
     protected UserRepository userRepo;
@@ -24,6 +31,7 @@ public class InventoryControllerBaseTest {
     @Autowired
     protected ApplicationContext appContext;
 
-    @Value("${server.port}")
-    protected int serverPort;
+    protected String getEndpointURL(String endpoint) {
+        return String.format("%s%s", hostURL, endpoint);
+    }
 }

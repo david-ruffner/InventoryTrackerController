@@ -11,4 +11,8 @@ Feature: Valid users can get a token
     When the client calls token with invalid IPv4 address
     Then the client receives a bad request response
 
-#  Scenario: client with invalid username or password
+  Scenario: client with invalid username
+    When the client calls token with invalid username
+    Then the client receives USER_NOT_AUTHORIZED message back
+    When the client calls token with invalid password
+    Then the client receives USER_NOT_AUTHORIZED message back

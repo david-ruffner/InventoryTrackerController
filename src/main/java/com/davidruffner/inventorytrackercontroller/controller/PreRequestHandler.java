@@ -1,8 +1,7 @@
 package com.davidruffner.inventorytrackercontroller.controller;
 
-import com.davidruffner.inventorytrackercontroller.config.EndpointConfig;
+import com.davidruffner.inventorytrackercontroller.config.AuthFilteringConfig;
 import com.davidruffner.inventorytrackercontroller.db.entities.User;
-import com.davidruffner.inventorytrackercontroller.db.services.AllowedIPAddressService;
 import com.davidruffner.inventorytrackercontroller.db.services.UserService;
 import com.davidruffner.inventorytrackercontroller.exceptions.ControllerException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,13 +18,10 @@ import static com.davidruffner.inventorytrackercontroller.util.Utils.getClientIp
 @Component
 public class PreRequestHandler implements HandlerInterceptor {
     @Autowired
-    AllowedIPAddressService addressService;
+    AuthFilteringConfig authFilteringConfig;
 
     @Autowired
     UserService userService;
-
-    @Autowired
-    EndpointConfig endpointConfig;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
@@ -33,9 +29,9 @@ public class PreRequestHandler implements HandlerInterceptor {
         String clientIp = getClientIpAddress(request);
         request.setAttribute(CLIENT_IP_ATTR, clientIp);
 
-        if (!addressService.isIPAddressAllowed(clientIp)) {
+        if (!authFilteringConfig.isAddressAuthorized(clientIp)) {
             throw new ControllerException.Builder(NOT_A_CHANCE, this.getClass())
-                    .withErrorMessage(String.format("IP Address: %s is not allowed " +
+                    .withErrorMessage(String.format("IP address '%s' is not allowed " +
                             "to access this resource", clientIp))
                     .withUnauthorizedResponseMessage()
                     .withIpAddress(request)
@@ -57,7 +53,7 @@ public class PreRequestHandler implements HandlerInterceptor {
             User user = userService.getUserFromToken(token, request);
 
             // Check if user is trying to access an admin endpoint
-            if (endpointConfig.isEndpointAdmin(requestURI) && !user.isAdmin()) {
+            if (authFilteringConfig.isEndpointAdmin(requestURI) && !user.isAdmin()) {
                 throw new ControllerException.Builder(USER_NOT_AUTHORIZED, this.getClass())
                         .withErrorMessage(String.format("User '%s' is not allowed to " +
                                 "access this endpoint", user.getUserId()))

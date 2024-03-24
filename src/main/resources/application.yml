@@ -6,19 +6,6 @@ database:
   password: ${DB_PASSWORD}
   dbName: InventoryController
 
-encrypt:
-  keyLength: 256
-  iterationCount: 65536
-  secretKeyFactory: PBKDF2WithHmacSHA256
-  cipherInstance: AES/CBC/PKCS5Padding
-#  secretKey:
-#  salt:
-  encryptionMethod: AES
-
-endpoint:
-  adminEndpoints:
-    - "/auth/addAuthorizedAddresses"
-
 spring:
   jpa:
     hibernate:

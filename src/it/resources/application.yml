@@ -1,5 +1,3 @@
-
-
 spring:
   datasource:
     driver-class-name: org.h2.Driver
@@ -21,14 +19,8 @@ logging:
       hibernate:
         sql: info
 
-encrypt:
-  keyLength: 256
-  iterationCount: 65536
-  secretKeyFactory: PBKDF2WithHmacSHA256
-  cipherInstance: AES/CBC/PKCS5Padding
-  # secretKey:
-  # salt:
-  encryptionMethod: AES
+# Can be either 'localFile' or 'vault'
+secrets-source: localFile
 
 server:
   port: 8081

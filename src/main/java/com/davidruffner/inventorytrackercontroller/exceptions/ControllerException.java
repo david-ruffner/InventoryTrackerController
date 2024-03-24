@@ -1,13 +1,16 @@
 package com.davidruffner.inventorytrackercontroller.exceptions;
 
 import com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.ResponseStatusCode;
-import com.davidruffner.inventorytrackercontroller.util.Constants;
+import com.davidruffner.inventorytrackercontroller.util.Logging.ErrorLogBuilder;
+import inet.ipaddr.AddressStringException;
+import inet.ipaddr.IPAddressString;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Optional;
 
 import static com.davidruffner.inventorytrackercontroller.controller.responses.ResponseStatus.getStrFromResponseStatus;
 import static com.davidruffner.inventorytrackercontroller.util.Constants.CLIENT_IP_ATTR;
+import static com.davidruffner.inventorytrackercontroller.util.Logging.ErrorLogBuilder.newErrorLogBuilder;
 
 public class ControllerException extends Exception {
     private final ResponseStatusCode responseStatus;
@@ -27,6 +30,14 @@ public class ControllerException extends Exception {
         this.userId = builder.userId;
         this.deviceId = builder.deviceId;
         this.ipAddress = builder.ipAddress;
+
+        this.errorMessage.ifPresent(errMsg -> {
+            ErrorLogBuilder errLog = newErrorLogBuilder(errMsg, this.callingClass);
+            this.userId.ifPresent(errLog::withUserId);
+            this.deviceId.ifPresent(errLog::withDeviceId);
+            this.ipAddress.ifPresent(errLog::withIpAddress);
+            errLog.log();
+        });
     }
 
     /**
@@ -180,6 +191,18 @@ public class ControllerException extends Exception {
             this.ipAddress = Optional.of(servletRequest
                     .getAttribute(CLIENT_IP_ATTR).toString());
             return this;
+        }
+
+        public Builder withIpAddress(String ipAddressStr) {
+            try {
+                IPAddressString ipAddress = new IPAddressString(ipAddressStr);
+                ipAddress.validate();
+                this.ipAddress = Optional.of(ipAddressStr);
+                return this;
+            } catch (AddressStringException ex) {
+                throw new RuntimeException(String.format(
+                        "IP Address '%s' is an invalid address", ipAddressStr));
+            }
         }
 
         public ControllerException build() {
