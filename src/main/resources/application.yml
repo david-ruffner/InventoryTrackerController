@@ -18,3 +18,6 @@ spring:
     username: ${database.username}
     password: ${database.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+aws:
+  region: us-east-1
